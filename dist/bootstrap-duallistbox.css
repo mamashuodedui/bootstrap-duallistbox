@@ -32,9 +32,13 @@
   display: inline-block;
 }
 
-.bootstrap-duallistbox-container .move,
-.bootstrap-duallistbox-container .remove {
+.bootstrap-duallistbox-container .move {
   width: 50%;
+  box-sizing: content-box;
+}
+
+.bootstrap-duallistbox-container .remove {
+  width: 20%;
   box-sizing: content-box;
 }
 
@@ -46,9 +50,28 @@
   border-top-left-radius: 0;
   border-top-right-radius: 0;
 }
-.bootstrap-duallistbox-container .moveall,
-.bootstrap-duallistbox-container .removeall {
+.bootstrap-duallistbox-container .moveall {
   width: 50%;
+  box-sizing: content-box;
+}
+
+.bootstrap-duallistbox-container .removeall {
+  width: 20%;
+  box-sizing: content-box;
+}
+
+.bootstrap-duallistbox-container .copy {
+  width: 20%;
+  box-sizing: content-box;
+}
+
+.bootstrap-duallistbox-container .moveup {
+  width: 20%;
+  box-sizing: content-box;
+}
+
+.bootstrap-duallistbox-container .movedown {
+  width: 20%;
   box-sizing: content-box;
 }
 
