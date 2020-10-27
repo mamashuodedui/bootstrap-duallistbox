@@ -35,6 +35,11 @@
       moveAllLabel: 'Move all',
       removeSelectedLabel: 'Remove selected',
       removeAllLabel: 'Remove all',
+      
+      copySelectedLabel: 'Copy',
+      moveUpSelectedLabel: 'Up',
+      moveDownSelectedLabel: 'Down',
+      
       moveOnSelect: true,                                                                 // true/false (forced true on androids, see the comment later)
       moveOnDoubleClick: true,                                                            // true/false (forced false on androids, cause moveOnSelect is forced to true)
       preserveSelectionOnMove: false,                                                     // 'all' / 'moved' / false
@@ -54,11 +59,19 @@
       eventMoveAllOverride: false,                                                        // boolean, allows user to unbind default event behaviour and run their own instead
       eventRemoveOverride: false,                                                         // boolean, allows user to unbind default event behaviour and run their own instead
       eventRemoveAllOverride: false,                                                      // boolean, allows user to unbind default event behaviour and run their own instead
+      eventCopyOverride: false,
+      eventMoveUpOverride: false,
+      eventMoveDownOverride: false,
       btnClass: 'btn-outline-secondary',                                                  // sets the button style class for all the buttons
-      btnMoveText: '&gt;',                                                                // string, sets the text for the "Move" button
+      //btnMoveText: '&gt;',                                                                // string, sets the text for the "Move" button
+      btnMoveText: '&#10095;',
       btnRemoveText: '&lt;',                                                              // string, sets the text for the "Remove" button
-      btnMoveAllText: '&gt;&gt;',                                                         // string, sets the text for the "Move All" button
-      btnRemoveAllText: '&lt;&lt;'                                                        // string, sets the text for the "Remove All" button
+      btnRemoveText: '&#10094;',
+      btnMoveAllText: '&#10095;&#10095;',                                                         // string, sets the text for the "Move All" button
+      btnRemoveAllText: '&#10094;&#10094;',                                                        // string, sets the text for the "Remove All" button
+      btnCopyText: '&#10064;',
+      btnMoveUpText: '<strong>&#8896;</strong>',
+      btnMoveDownText: '<strong>&#8897;</strong>'
     },
     // Selections are invisible on android if the containing select is styled with CSS
     // http://code.google.com/p/android/issues/detail?id=16922
@@ -109,6 +122,7 @@
   }
 
   function formatString(s, args) {
+    console.log(s, args);
     return s.replace(/{(\d+)}/g, function(match, number) {
       return typeof args[number] !== 'undefined' ? args[number] : match;
     });
@@ -150,7 +164,6 @@
 
   function refreshSelects(dualListbox) {
     dualListbox.selectedElements = 0;
-
     dualListbox.elements.select1.empty();
     dualListbox.elements.select2.empty();
 
@@ -266,7 +279,6 @@
         changeSelectionState(dualListbox, $item.data('original-index'), true);
       }
     });
-
     refreshSelects(dualListbox);
     triggerChangeEvent(dualListbox);
     if(dualListbox.settings.sortByInputOrder){
@@ -274,6 +286,7 @@
     } else {
         sortOptions(dualListbox.elements.select2, dualListbox);
     }
+    console.log(dualListbox.elements.select2)
   }
 
   function remove(dualListbox) {
@@ -339,7 +352,48 @@
     refreshSelects(dualListbox);
     triggerChangeEvent(dualListbox);
   }
-
+    
+  //add customized action: copy, move up, move down
+    function copy(dualListbox) {
+        dualListbox.elements.select2.find('option:selected').each(function(index, item) {
+            var $item = $(item)
+            dualListbox.elements.select2.append($item.clone(true));
+            triggerChangeEvent(dualListbox);
+            dualListbox.sortIndex++;
+            $item.attr('data-sortindex', dualListbox.sortIndex);
+            dualListbox.elements.select2.append($item)
+            triggerChangeEvent(dualListbox);
+        });
+        if(dualListbox.settings.sortByInputOrder){
+            sortOptionsByInputOrder(dualListbox.elements.select2);
+        } else {
+            sortOptions(dualListbox.elements.select2, dualListbox);
+        }
+    }
+  
+  function moveDown(dualListbox) {
+    var selectedItems = dualListbox.elements.select2.find('option:selected');
+    for (var i = selectedItems.length - 1; i > -1; i--)
+    {
+       var allItems = dualListbox.elements.box2.find('option');
+       var selectedItem = $(selectedItems[i]);
+       var selectedIndex = selectedItem.index();
+       selectedItem.insertAfter(allItems[selectedIndex + 1]);
+    }
+  }
+  
+  function moveUp(dualListbox) {
+    var selectedItems = dualListbox.elements.select2.find('option:selected');
+    for (var i = 0; i < selectedItems.length; i++)
+    {
+       var allItems = dualListbox.elements.box2.find('option');
+       var selectedItem = $(selectedItems[i]);
+       var selectedIndex = selectedItem.index();
+       console.log(selectedIndex)
+       selectedItem.insertBefore(allItems[selectedIndex - 1]);
+    }
+  }
+  //end of the add
   function bindEvents(dualListbox) {
     dualListbox.elements.form.submit(function(e) {
       if (dualListbox.elements.filterInput1.is(':focus')) {
@@ -394,6 +448,25 @@
     dualListbox.elements.filterInput2.on('change keyup', function() {
       filter(dualListbox, 2);
     });
+    
+    //add customized code for actions: copy, move up, move down
+    if (dualListbox.settings.eventCopyOverride === false) {
+      dualListbox.elements.copyButton.on('click', function() {
+        copy(dualListbox);
+      });
+    }
+    
+    if (dualListbox.settings.eventMoveUpOverride === false) {
+      dualListbox.elements.moveUpButton.on('click', function() {
+        moveUp(dualListbox);
+      });
+    }
+    
+    if (dualListbox.settings.eventMoveDownOverride === false) {
+      dualListbox.elements.moveDownButton.on('click', function() {
+        moveDown(dualListbox);
+      });
+    } 
   }
 
   BootstrapDualListbox.prototype = {
@@ -424,6 +497,9 @@
         '   <div class="btn-group buttons">' +
         '     <button type="button" class="btn remove"></button>' +
         '     <button type="button" class="btn removeall"></button>' +
+        '     <button type="button" class="btn copy"></button>' + 
+        '     <button type="button" class="btn moveup"></button>' + 
+        '     <button type="button" class="btn movedown"></button>' + 
         '   </div>' +
         '   <select multiple="multiple"></select>' +
         ' </div>' +
@@ -449,6 +525,9 @@
         removeButton: $('.box2 .remove', this.container),
         moveAllButton: $('.box1 .moveall', this.container),
         removeAllButton: $('.box2 .removeall', this.container),
+        copyButton: $('.box2 .copy', this.container),
+        moveUpButton: $('.box2 .moveup', this.container),
+        moveDownButton: $('.box2 .movedown', this.container),
         form: $($('.box1 .filter', this.container)[0].form)
       };
 
@@ -478,6 +557,11 @@
       this.setNonSelectedListLabel(this.settings.nonSelectedListLabel);
       this.setHelperSelectNamePostfix(this.settings.helperSelectNamePostfix);
       this.setSelectOrMinimalHeight(this.settings.selectorMinimalHeight);
+      
+      //add customized actions
+      this.setCopySelectedLabel(this.settings.copySelectedLabel);
+      this.setMoveUpSelectedLabel(this.settings.moveUpSelectedLabel);
+      this.setMoveDownSelectedLabel(this.settings.moveDownSelectedLabel);
 
       updateSelectionStates(this);
 
@@ -498,6 +582,10 @@
       this.setBtnRemoveText(this.settings.btnRemoveText);
       this.setBtnMoveAllText(this.settings.btnMoveAllText);
       this.setBtnRemoveAllText(this.settings.btnRemoveAllText);
+      
+      this.setBtnCopyText(this.settings.btnCopyText);
+      this.setBtnMoveUpText(this.settings.btnMoveUpText);
+      this.setBtnMoveDownText(this.settings.btnMoveDownText);
 
       // Hide the original select
       this.element.hide();
@@ -557,6 +645,56 @@
       }
       return this.element;
     },
+    
+    //customized code for action: copy, move up, move down
+    setCopySelectedLabel: function(value, refresh) {
+      this.settings.copySelectedLabel = value;
+      this.elements.copyButton.attr('title', value);
+      if (refresh) {
+        refreshSelects(this);
+      }
+      return this.element;
+    },
+    setMoveUpSelectedLabel: function(value, refresh) {
+      this.settings.moveUpSelectedLabel = value;
+      this.elements.moveUpButton.attr('title', value);
+      if (refresh) {
+        refreshSelects(this);
+      }
+      return this.element;
+    },
+    setMoveDownSelectedLabel: function(value, refresh) {
+      this.settings.moveDownSelectedLabel = value;
+      this.elements.moveDownButton.attr('title', value);
+      if (refresh) {
+        refreshSelects(this);
+      }
+      return this.element;
+    },
+    setCopyOnSelect: function(value, refresh) {
+      if (isBuggyAndroid) {
+        value = true;
+      }
+      this.settings.copyOnSelect = value;
+      if (this.settings.copyOnSelect) {
+        this.container.addClass('copyonselect');
+        var self = this;
+        this.elements.select2.on('change', function() {
+          remove(self);
+        });
+        this.elements.moveButton.detach();
+        this.elements.removeButton.detach();
+      } else {
+        
+      }
+      if (refresh) {
+        refreshSelects(this);
+      }
+      return this.element;
+    },
+    
+    //end of the add
+    
     setMoveOnSelect: function(value, refresh) {
       if (isBuggyAndroid) {
         value = true;
@@ -784,6 +922,10 @@
       this.elements.removeButton.attr('class', 'btn remove').addClass(value);
       this.elements.moveAllButton.attr('class', 'btn moveall').addClass(value);
       this.elements.removeAllButton.attr('class', 'btn removeall').addClass(value);
+      this.elements.copyButton.attr('class', 'btn copy').addClass(value);
+      this.elements.moveUpButton.attr('class', 'btn moveup').addClass(value);
+      this.elements.moveDownButton.attr('class', 'btn movedown').addClass(value);
+
       if (refresh) {
         refreshSelects(this);
       }
@@ -821,6 +963,33 @@
       }
       return this.element;
     },
+    //customized button for copy, moveUp, moveDownButton
+    setBtnCopyText: function(value, refresh) {
+      this.settings.btnCopyText = value;
+      this.elements.copyButton.html(value);
+      if (refresh) {
+        refreshSelects(this);
+      }
+      return this.element;
+    },
+    setBtnMoveUpText: function(value, refresh) {
+      this.settings.btnMoveUpText = value;
+      this.elements.moveUpButton.html(value);
+      if (refresh) {
+        refreshSelects(this);
+      }
+      return this.element;
+    },
+    setBtnMoveDownText: function(value, refresh) {
+      this.settings.btnMoveDownText = value;
+      this.elements.moveDownButton.html(value);
+      if (refresh) {
+        refreshSelects(this);
+      }
+      return this.element;
+    },
+    
+    
     getContainer: function() {
       return this.container;
     },
