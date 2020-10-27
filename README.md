@@ -23,7 +23,7 @@ $ bower install bootstrap-duallistbox
 3. Include plugin's code:
 
 ```html
-<script src="dist/jquery.bootstrap-duallistbox.min.js"></script>
+<script src="dist/jquery.bootstrap-duallistbox.js"></script>
 <link rel="stylesheet" type="text/css" href="../src/bootstrap-duallistbox.css">
 ```
 
@@ -49,6 +49,10 @@ When calling `$("#element").bootstrapDualListbox()` you can pass a parameters ob
 - `moveAllLabel`, defaults to `'Move all'`, is the label for the "Move All" button.
 - `removeSelectedLabel`, defaults to `'Remove selected'`, is the label for the "Remove Selected" button.
 - `removeAllLabel`, defaults to `'Remove all'`, is the label for the "Remove All" button.
+- `copySelectedLabel, defaults to 'Copy'`, is the label for the "Copy" button.
+- `moveUpSelectedLabel, defaults to 'Up'`, is the label for the "Move Up" button.
+- `moveDownSelectedLabel, defaults to 'Down'`, is the label for the "Move Down" button.
+      
 - `moveOnSelect`, defaults to `true`, determines whether to move `option`s upon selection. This option is forced to `true` on the Android browser.
 - `moveOnDoubleClick`, defaults to `true`, determines whether to move `option`s upon double click. This option is not used on the Android browser.
 - `preserveSelectionOnMove`, can be`'all'` (for selecting both moved elements and the already selected ones in the target list) or `'moved'` (for selecting moved elements only); defaults to `false`.
